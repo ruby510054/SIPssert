@@ -57,6 +57,11 @@ class TestsSet():
         if self.default_networks and not isinstance(self.default_networks, list):
             self.default_networks = [self.default_networks]
         self.setup_networks()
+        self.timeout = self.config.get("timeout", 0)
+        self.tasks = tasks_list.TasksList("tasks", self.set_path, 
+                self.set_logs_dir, self.config, self.controller, 
+                self.default_network, self.default_networks, None,
+                self.name, self.defaults)
         self.init_tasks = tasks_list.TasksList("init_tasks", self.set_path,
                 self.init_tasks_logs_dir, self.config, self.controller,
                 self.default_network, self.default_networks, None,
@@ -65,6 +70,11 @@ class TestsSet():
                 self.cleanup_tasks_logs_dir, self.config, self.controller,
                 self.default_network, self.default_networks, None,
                 f"{self.name}/cleanup_tasks", self.defaults)
+        if self.timeout != 0:
+            self.tasks.set_timeout(self.timeout)
+        self.test_suitetes_data = {
+            "test_cases":[]
+        }
         self.create_set_logs_dir()
         self.build_scenarios()
 
@@ -119,6 +129,7 @@ class TestsSet():
         """Runs one or all tests in a set"""
         start_time = time.time()
         failure = False
+        self.tasks.start()
         try:
             self.init_tasks.run()
         except Exception as e:
@@ -135,6 +146,7 @@ class TestsSet():
             except Exception as e:
                 logger.slog.exception(e)
             self.cleanup_tasks.run(force_all=True)
+        self.tasks.stop()
         if not self.controller.no_delete:
             # cleanup networks
             for net in self.networks:

@@ -26,6 +26,7 @@ from sipssert import logger
 from sipssert import dependencies
 from sipssert.state import State
 import docker
+import subprocess
 
 class Task():
     
@@ -40,6 +41,10 @@ class Task():
         self.config = configuration
         self.network = self.config.get("network", None)
         self.networks = self.config.get("networks", [])
+        self.workdir = self.config.get("workdir")
+        self.group = self.config.get("group")
+        self.dns = self.config.get("dns")
+        self.mode = self.config.get("mode", "ro")
         self.controller = None
         self.test_dir = test_dir
         self.volumes = self.config.get("volumes", {})
@@ -125,7 +130,7 @@ class Task():
 
     def add_volume_dir(self, path, dest=None, mode="ro"):
         mount_point = dest if dest else self.mount_point
-        self.log.info("mounting {} to {}".format(path, mount_point))
+        self.log.info("mounting {} to {} with {} mode".format(path, mount_point, mode))
         self.volumes[path] = {
                 "bind": mount_point,
                 "mode": mode
@@ -143,6 +148,21 @@ class Task():
     def match(self, name):
         return self.name == name or name in self.labels
 
+    def normalized_volumes_dict(self, volumes):
+        if not volumes:
+            return volumes
+
+        normalized_volumes = {}
+
+        for src_path, mount_config in volumes.items():
+            if not os.path.isabs(src_path):
+                normalized_src = os.path.join(os.getcwd(), src_path)
+            else:
+                normalized_src = src_path
+            normalized_volumes[normalized_src] = mount_config
+
+        return normalized_volumes
+
     def create(self, controller, prefix=None):
         self.controller = controller
         args = self.get_args()
@@ -157,6 +177,15 @@ class Task():
         except docker.errors.ImageNotFound as e:
             self.log.info(f"pulling image {self.image}")
             self.controller.docker.images.pull(self.image)
+        
+        self.volumes = self.normalized_volumes_dict(self.volumes)
+
+        uid = subprocess.run("id -u", shell=True, capture_output=True, text=True)
+        if self.group:
+            gid = subprocess.run(f"getent group {self.group} | cut -d: -f3", shell=True, capture_output=True, text=True)
+        else:
+            gid = uid
+        user = uid.stdout.strip() + ":" + gid.stdout.strip()
 
         self.args_dict = { 'image': self.image,
                            'command': args,
@@ -169,8 +198,13 @@ class Task():
                            'environment': env,
                            'stop_signal': self.stop_signal,
                            'network_mode': self.host_network,
-                           'extra_hosts': self.extra_hosts
+                           'extra_hosts': self.extra_hosts,
+                           'user': user
                           }
+        if self.workdir is not None:
+            self.args_dict["working_dir"] = self.workdir
+        if self.dns is not None:
+            self.args_dict["dns"] = [self.dns]
 
         self.log.info("container {} prepared".format(self.container_name))
         self.state = State.CREATED

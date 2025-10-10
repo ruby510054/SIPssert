@@ -55,7 +55,12 @@ class BridgedNetwork(network.Network):
             self.device = self.name
         if "internal" in network_config.keys():
             self.internal = network_config["internal"]
-        self.setup()
+        
+        existing_networks = [network.name for network in self.controller.docker.networks.list()]
+        if self.name in existing_networks:
+            self.created = True
+        else:
+            self.setup()
 
     def setup(self):
         """Sets up the network"""

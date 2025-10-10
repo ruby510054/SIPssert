@@ -69,13 +69,28 @@ class Tracer():
         """Stops started tcpdump"""
         if not self.process:
             return
-        self.process.terminate()
-        self.process.wait()
-        rc, err = self.status()
-        self.process = None
-        logger.slog.debug(f"stopped tracer for {self.name}")
-        if rc and rc != 0:
-            logger.slog.error(f"tracer {self.name} failed with ({rc}):\n{err}")
+        
+        try:
+            self.process.terminate()
+            self.process.wait(timeout=5)
+        except subprocess.TimeoutExpired:
+            try:
+                self.process.kill()
+            except PermissionError as e:
+                logger.slog.error(f"could not kill tracer {self.name}: {e}")
+        except PermissionError as e:
+            logger.slog.error(f"could not terminate tracer {self.name}: {e}")
+        except Exception as e:
+            logger.slog.warning(f"could not stop tracer {self.name}: {e}")
+        finally:
+            try:
+                rc, err = self.status()
+                if rc and rc != 0:
+                    logger.slog.error(f"tracer {self.name} failed with ({rc}):\n{err}")
+            except:
+                logger.slog.debug(f"could not retrieve final status for tracer {self.name}")
+            self.process = None
+            logger.slog.debug(f"stopped tracer for {self.name}")
 
     def start(self):
         """Starts a tcpdump for a scenario"""

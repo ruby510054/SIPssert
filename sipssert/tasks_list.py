@@ -172,6 +172,37 @@ class TasksList(list):
             logger.slog.error(exc)
             self.update_status(TestStatus.FAIL)
 
+    def start(self):
+        self.start_time = time.time()
+        last_events_time = self.start_time
+        self.exc = None
+        while (len(self.pending_tasks) > 0 or len(self.running_tasks) > 0) and self.exc is None:
+            current_time = time.time()
+            self.handle_events(last_events_time, current_time)
+            last_events_time = current_time
+            tasks_to_run = self.get_tasks_to_run(current_time)
+            if len(tasks_to_run) > 0:
+                logger.slog.debug("running tasks {}".format(tasks_to_run))
+            for task in tasks_to_run:
+                try:
+                    task.run()
+                    if task.daemon:
+                        self.daemon_tasks.append(task)
+                    else:
+                        self.running_tasks.append(task)
+                except Exception as e:
+                    self.exc = e
+                    self.stop()
+                    return
+
+                self.pending_tasks.remove(task)
+
+    def stop(self):
+        self.terminate(self.exc)
+        if len(self) > 0:
+            logger.slog.debug("finished running tasks {}".format(self))
+            logger.slog.debug("tasks executed in {:.3f}s".format(time.time() - self.start_time))
+
     def run(self, force_all=False):
         self.start_time = time.time()
         last_events_time = self.start_time
@@ -263,7 +294,7 @@ class TasksList(list):
                 class_name = getattr(task_mod, classes[0])
                 new_task = class_name(self.task_dir, definition)
                 new_task.set_logs_dir(self.logs_dir)
-                new_task.add_volume_dir(self.task_dir)
+                new_task.add_volume_dir(self.task_dir, mode=new_task.mode)
                 new_task.create(self.controller, self.container_prefix)
                 return new_task
         except AttributeError:

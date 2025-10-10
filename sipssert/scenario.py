@@ -22,6 +22,7 @@
 import os
 import importlib
 import time
+import shutil
 from datetime import datetime
 from sipssert import task
 from sipssert import logger
@@ -81,6 +82,16 @@ class Scenario():
             self.init_tasks.set_timeout(self.timeout)
             self.tasks.set_timeout(self.timeout)
             self.cleanup_tasks.set_timeout(self.timeout)
+
+    def mv_pcapng(self, src, dst):
+        pcapng_files = [file for file in os.listdir(src) if file.endswith('.pcapng')]
+
+        for file in pcapng_files:
+            source_file_path = os.path.join(src, file)
+            destination_file_path = os.path.join(dst, file)
+            shutil.move(source_file_path, destination_file_path)
+
+        logger.slog.debug("All pcapng files moved successfully!")
 
     def create_scen_logs_dir(self):
         """Creates current scenario logs directory"""
@@ -143,6 +154,7 @@ class Scenario():
             self.tracer.stop()
         elapsed_sec = time.time() - start_time
         logger.slog.debug("scenario executed in {:.3f}s".format(elapsed_sec))
+        self.mv_pcapng(self.dirname, self.scen_logs_dir)
         self.tlogger.status(self.tasks.status)
         if self.controller.junit_xml:
             self.controller.junit_reporter.add_status(self.test_set_name, self.name, self.tasks.status, elapsed_sec)
