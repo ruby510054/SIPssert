@@ -18,6 +18,9 @@
 ##
 
 from sipssert.task import Task
+import tarfile
+import os
+import shutil
 
 class MysqlTask(Task):
 
@@ -25,6 +28,23 @@ class MysqlTask(Task):
     default_image = "mysql"
     default_daemon = True
     default_mount_point = "/docker-entrypoint-initdb.d"
+
+    def __init__(self, test_dir, config):
+        super().__init__(test_dir, config)
+        tar_file = 'mysipsrvdata'
+        self.untar(tar_file)
+    
+    def untar(self, tar_file):
+        tar_file_path = os.path.join(os.getcwd(), f"{tar_file}.tar")
+        mysql_dir = os.path.join(os.getcwd(), tar_file)
+        if os.path.exists(mysql_dir):
+            shutil.rmtree(mysql_dir)
+        try:
+            with tarfile.open(tar_file_path, 'r') as tar:
+                tar.extractall(path=os.getcwd())
+                self.log.info(f"extracted contents of {tar_file} to {os.getcwd()}")
+        except tarfile.TarError as e:
+            self.log.error(f"error extracting {tar_file}: {e}, maybe forget to put sipsrvdata.tar under test case file")
 
     def get_task_env(self):
 
