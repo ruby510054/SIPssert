@@ -83,6 +83,15 @@ class Scenario():
             self.tasks.set_timeout(self.timeout)
             self.cleanup_tasks.set_timeout(self.timeout)
 
+        self.copy_tool("utils_toolbox.py")
+
+    def copy_tool(self, name):
+        src = os.path.join(os.path.dirname(self.dirname), name)
+        link = os.path.join(self.dirname, name)
+        if os.path.exists(src):
+            shutil.copy(src, link)
+            logger.slog.debug(f"copy {src} to {link}")
+
     def mv_pcapng(self, src, dst):
         pcapng_files = [file for file in os.listdir(src) if file.endswith('.pcapng')]
 
@@ -92,6 +101,14 @@ class Scenario():
             shutil.move(source_file_path, destination_file_path)
 
         logger.slog.debug("All pcapng files moved successfully!")
+
+    def remove_toolbox(self, name):
+        src = os.path.join(self.dirname, name)
+
+        if os.path.exists(src):
+            os.remove(src)
+
+        logger.slog.debug("Remove toolbox successfully!")
 
     def create_scen_logs_dir(self):
         """Creates current scenario logs directory"""
@@ -155,6 +172,7 @@ class Scenario():
         elapsed_sec = time.time() - start_time
         logger.slog.debug("scenario executed in {:.3f}s".format(elapsed_sec))
         self.mv_pcapng(self.dirname, self.scen_logs_dir)
+        self.remove_toolbox("utils_toolbox.py")
         self.tlogger.status(self.tasks.status)
         if self.controller.junit_xml:
             self.controller.junit_reporter.add_status(self.test_set_name, self.name, self.tasks.status, elapsed_sec)

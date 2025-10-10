@@ -1,0 +1,80 @@
+---
+bridge_networks:
+  - name: {{ network_name }}
+    subnet: {{ network_range }}
+    gateway: {{ network_gateway }}
+
+# default network that should be used by all scenarios
+network: {{ network_name }}
+
+tasks:
+  - name: DNS Server
+    type: dnsmasq
+    
+  - name: MySQL Server
+    type: mysql
+
+  - name: OpenSIPS
+    type: opensips
+    require:
+      ready: mysql
+
+  - name: Linphone1
+    type: linphone
+    ip: {{ linphone1_ip }}
+
+cleanup_tasks:
+  - name: Shutdown
+    type: python
+    network: host
+
+# global defaults
+defaults:
+  opensips:
+    ip: {{ opensips_ip }}
+    image: {{ test_image }}:{{ opensips_tag }}
+    socket: udp:{{ opensips_ip }}:{{ opensips_port }}
+    dns: {{ dnsmasq_ip }}
+    stop_timeout: 5
+  linphone:
+    image: {{ test_image }}:{{  linphone_tag }}
+    volumes: {'linphonerc_1':{'bind': '/home/{{ login_user }}/.linphonerc', 'mode': 'rw'}}
+    dns: {{ dnsmasq_ip }}
+    mount_point: /home/{{ login_user }}/test
+  python:
+    image: {{ test_image }}:{{ python_tag }}
+    volumes: {'{{ daemon }}':{'bind': '{{ daemon }}', 'mode': 'ro'}}
+    src: {{ daemon }}
+    dst: {{ daemon }}
+    vapp_src: {{ vapp1_src }}
+    vapp_dst: {{ vapp_dst }}
+    mode: rw
+    workdir: /home/{{ login_user }}/test
+    ip: {{ python_ip }}
+    mount_point: /home/{{ login_user }}/test
+    args:
+      - /home/{{ login_user }}/test/steps.py
+      - -s {{ opensips_ip }}
+      - -t {{ test_dir }}
+    group: docker
+  mysql:
+    ip: {{ mysql_ip }}
+    image: mysql:8.0.34-debian
+    volumes: {'{{ mydata_src }}':{'bind': '{{ mydata_dst }}', 'mode': 'rw'}}
+    label: mysql
+    stop_timeout: 5
+    ready:
+      wait: {{ mysql_ready_timeout }}
+  dnsmasq:
+    image: {{ test_image }}:{{ dnsmasq_tag }}
+    volumes: {'{{ hosts_src }}':{'bind': '{{ hosts_dst }}', 'mode': 'ro'}}
+    ip: {{ dnsmasq_ip }}
+    mount_point: /home/{{ login_user }}/test
+    args:
+      - --listen-address={{ dnsmasq_ip }}
+      - --srv-host=_sip._udp.sipssert-test.tw,sipsrv.sipssert-test.tw,5060,1,200
+      - --srv-host=_sip._udp.sipssert-test.tw,sipsrv2.sipssert-test.tw,5060,2,100
+      - --srv-host=_sip._tcp.sipssert-test.tw,sipsrv.sipssert-test.tw,5060,3,400
+      - --srv-host=_sip._tcp.sipssert-test.tw,sipsrv2.sipssert-test.tw,5060,4,300
+      - --srv-host=_sips._tls.sipssert-test.tw,sipsrv.sipssert-test.tw,5061,5,600
+      - --srv-host=_sips._tls.sipssert-test.tw,sipsrv2.sipssert-test.tw,5061,6,500

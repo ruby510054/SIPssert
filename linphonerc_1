@@ -1,0 +1,134 @@
+[net]
+download_bw=0
+upload_bw=0
+mtu=1300
+# use fixed port for easier debugging and packet analysis
+sip_port=5060
+sip_tcp_port=5060
+sip_tls_port=5061
+
+[sip]
+# SIP server configuration
+# you can set default proxy here or use register command
+default_proxy=0
+guess_hostname=0
+inc_timeout=30
+in_call_timeout=0
+delayed_timeout=4
+use_info=0
+use_rfc2833=1
+use_ipv6=0
+register_only_when_network_is_up=0
+auto_net_state_mon=0
+
+[sound]
+# disable audio devices since we're in a container without audio hardware
+playback_dev_id=ALSA: default device
+capture_dev_id=ALSA: default device
+ringer_dev_id=ALSA: default device
+# you can also use null driver to completely disable audio
+# playback_dev_id=Null audio device
+# capture_dev_id=Null audio device
+# ringer_dev_id=Null audio device
+echocancellation=0
+echolimiter=0
+echocancel_framesize=64
+
+[video]
+# disable video for testing
+enabled=0
+display=0
+capture=0
+show_local=0
+self_view=0
+
+[rtp]
+# RTP configuration
+audio_rtp_port=7078
+video_rtp_port=9078
+audio_jitt_comp=60
+video_jitt_comp=60
+nortp_timeout=30
+audio_adaptive_jitt_comp_enabled=1
+video_adaptive_jitt_comp_enabled=1
+
+[misc]
+# enable detailed logging for debugging
+log_level=debug
+# you can also set it to message, warning, or error
+# log_level=message
+
+[GtkUi]
+# disable UI-related settings since we're using CLI
+uri=
+
+[auth_info_0]
+# authentication template - you can add credentials here
+# or provide them via register command
+username=6432001
+userid=6432001
+passwd=P4ss001
+realm=sipssert-test.tw
+domain=sipssert-test.tw
+
+# Example of pre-configured proxy
+[proxy_0]
+reg_proxy=<sip:sipssert-test.tw:5060>
+reg_identity=sip:6432001@sipssert-test.tw
+reg_expires=30
+reg_sendregister=1
+publish=0
+# dial_escape_plus=0
+# quality_reporting_enabled=0
+# quality_reporting_collector=
+# quality_reporting_interval=0
+# contact_parameters=
+# avpf=0
+# avpf_rr_interval=5
+# realm=opensips
+# nat_policy_ref=nat_policy_default_values
+
+[nat_policy_default_values]
+# NAT policy settings
+stun_server=
+nat_address=
+upnp=0
+ice=0
+turn=0
+turn_username=
+turn_password=
+
+[codec_0]
+# Audio codec configuration - G711 mu-law (PCMU)
+mime=PCMU
+rate=8000
+channels=1
+enabled=1
+
+[codec_1]
+# Audio codec - G711 a-law (PCMA)
+mime=PCMA
+rate=8000
+channels=1
+enabled=1
+
+[codec_2]
+# Audio codec - G722
+mime=G722
+rate=8000
+channels=1
+enabled=1
+
+[codec_3]
+# Audio codec - Opus (if available)
+mime=opus
+rate=48000
+channels=2
+enabled=1
+
+[codec_4]
+# Audio codec - telephone-event for DTMF
+mime=telephone-event
+rate=8000
+channels=1
+enabled=1

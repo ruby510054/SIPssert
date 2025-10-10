@@ -77,9 +77,9 @@ class Tracer():
             try:
                 self.process.kill()
             except PermissionError as e:
-                logger.slog.error(f"could not kill tracer {self.name}: {e}")
+                logger.slog.info(f"could not kill tracer {self.name}: {e}")
         except PermissionError as e:
-            logger.slog.error(f"could not terminate tracer {self.name}: {e}")
+            logger.slog.info(f"could not terminate tracer {self.name}: {e}")
         except Exception as e:
             logger.slog.warning(f"could not stop tracer {self.name}: {e}")
         finally:

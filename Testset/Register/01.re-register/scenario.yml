@@ -1,0 +1,7 @@
+---
+timeout: 70
+
+tasks:
+  - name: Python
+    type: python
+    network: host

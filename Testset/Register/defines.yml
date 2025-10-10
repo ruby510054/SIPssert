@@ -1,0 +1,24 @@
+---
+network_name: test-network
+network_range: 172.21.23.0/24
+network_gateway: 172.21.23.254
+test_image: testenv
+opensips_tag: opensips-3.4
+python_tag: python-3.10
+opensips_ip: 172.21.23.1
+opensips_port: 5060
+linphone_tag: linphone-x64
+linphone1_ip: 172.21.23.30
+daemon: /var/run/docker.sock
+python_ip: 172.21.23.100
+login_user: ruby
+mysql_ip: 172.21.23.11
+mydata_src: mysipsrvdata
+mydata_dst: /var/lib/mysql
+mysql_tag: mysql-debian
+mysql_ready_timeout: 15
+dnsmasq_tag: dnsmasq-2.90
+hosts_src: hosts
+hosts_dst: /etc/hosts
+dnsmasq_ip: 172.21.23.3
+test_dir: Register

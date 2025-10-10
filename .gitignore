@@ -11,3 +11,4 @@ __pycach*
 *egg-info/
 tags
 /logs
+/mysipsrvdata
