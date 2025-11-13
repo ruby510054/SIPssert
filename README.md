@@ -2,6 +2,9 @@
 
 # SIPssert Testing Framework
 
+> **Note**: This is a modified version of SIPssert for automated testing course project.
+> See [CHANGES.md](CHANGES.md) for detailed information about modifications.
+
 SIPssert Testing Framework is a tool used for facilitating the automation and
 testing of complex VoIP setups, that involve multiple types of components and
 various interactions between them. Its purpose is to provide a set of
