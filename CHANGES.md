@@ -1,4 +1,4 @@
-# Modifications for Course Project
+# Modifications for SIP automated testing
 
 This document describes the modifications made to the SIPssert Testing Framework for automated SIP testing.
 
