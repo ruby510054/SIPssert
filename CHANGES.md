@@ -1,6 +1,6 @@
 # Modifications for Course Project
 
-This document describes the modifications made to the SIPssert Testing Framework as part of a course project for automated SIP testing.
+This document describes the modifications made to the SIPssert Testing Framework for automated SIP testing.
 
 ## Overview
 
@@ -9,8 +9,6 @@ This modified version extends the original SIPssert framework with new task type
 ## Author
 
 - Ruby (@ruby510054)
-- Course: [Your Course Name]
-- Date: Fall 2024
 
 ## Major Changes
 
